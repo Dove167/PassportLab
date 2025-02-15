@@ -34,3 +34,11 @@
     </div>
   </div>
 </div>
+
+<% if (messages.length > 0) { %>
+  <div class="alert alert-danger">
+    <% messages.forEach(message => { %>
+      <p><%= message %></p>
+    <% }) %>
+  </div>
+<% } %>

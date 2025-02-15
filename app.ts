@@ -3,59 +3,94 @@ import expressLayouts from "express-ejs-layouts";
 import session from "express-session";
 import path from "path";
 import passportMiddleware from './middleware/passportMiddleware';
-require('dotenv').config()
+import { Request, Response, NextFunction } from 'express';
 
-const port = process.env.PORT || 8000; // Use process.env.PORT for environment variable
+require('dotenv').config();
 
+const port = process.env.PORT || 8000;
 const app = express();
+
+// Session store declaration
+const sessionStore = new session.MemoryStore();
+
+// Type extensions
+declare module 'express-session' {
+  interface SessionData {
+    passport: {
+      user?: number;
+    };
+    messages?: string[];
+  }
+}
 
 app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname, "public")));
 
-//Middleware for express session
+// Session configuration
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "defaultSecret", // Use environment variable for session secret
+    secret: process.env.SESSION_SECRET || 'fallback-secret',
     resave: false,
     saveUninitialized: false,
+    store: sessionStore,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 24 * 60 * 60 * 1000,
     },
   })
 );
 
-import authRoute from "./routes/authRoute";
-import indexRoute from "./routes/indexRoute";
-
-// Middleware for express
-app.use(express.json());
-app.use(expressLayouts);
-app.use(express.urlencoded({ extended: true }));
-
-//Initialize Passport middleware
-passportMiddleware(app);
-
-// Logging middleware for debugging (remove in production)
-app.use((req, res, next) => {
-  console.log(`User details are: `, req.user);
-  console.log("Entire session object:", req.session);
-  console.log(`Session details are: `, (req.session as any).passport);
+// Message middleware
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.locals.messages = req.session.messages || [];
+  req.session.messages = [];
   next();
 });
 
-//Define routes
+// Routes import
+import authRoute from "./routes/authRoute";
+import indexRoute from "./routes/indexRoute";
+import adminRoute from "./routes/adminRoute";
+
+// Middleware ordering
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(expressLayouts);
+
+// Passport initialization
+passportMiddleware(app);
+
+// Debugging middleware
+app.use((req: Request, res: Response, next: NextFunction) => {
+  console.log(`User details: `, req.user);
+  console.log("Session object:", req.session);
+  next();
+});
+
+// Session store methods
+export const sessionStoreMethods = {
+  getAllSessions: (callback: (err: any, sessions?: any[]) => void) => {
+    sessionStore.all(callback);
+  },
+  destroySession: (sessionId: string, callback: (err?: any) => void) => {
+    sessionStore.destroy(sessionId, callback);
+  }
+};
+
+// Routes
 app.use("/", indexRoute);
 app.use("/auth", authRoute);
+app.use("/", adminRoute);
 
-// Error handling middleware
-app.use((err, req, res, next) => {
+// Error handling
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error(err.stack);
-  res.status(500).send('Something broke!'); // Send a user-friendly error message
+  res.status(500).send('Something broke!');
 });
 
-// Start the server
 app.listen(port, () => {
-  console.log(`🚀 Server has started on port ${port}`);
+  console.log(`🚀 Server running on port ${port}`);
 });
+
+export { sessionStore };

@@ -1,44 +1,20 @@
-import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local";
-import { getUserByEmailIdAndPassword, getUserById} from "../../controllers/userController";
-import { PassportStrategy } from '../../interfaces/index';
+import passport from 'passport';
+import { Strategy as LocalStrategy } from 'passport-local';
+import { getUserByEmailIdAndPassword } from '../../controllers/userController';
 
 const localStrategy = new LocalStrategy(
-  {
-    usernameField: "email",
-    passwordField: "password",
-  },
-  async (email: string, password: string, done) => {
-    const user = await getUserByEmailIdAndPassword(email, password);
-    return user
-      ? done(null, Express.User)
-      : done(null, false, {
-        message: "Your login details are not valid. Please try again",
-      });
+  { usernameField: 'email' },
+  async (email, password, done) => {
+    try {
+      const user = await getUserByEmailIdAndPassword(email, password);
+      return user ? done(null, user) : done(null, false);
+    } catch (err) {
+      return done(err);
+    }
   }
 );
-/*
-FIX ME (types) 😭
-*/
-passport.serializeUser((user: { id: string }, done: (err: any, id?: string) => void) => {
-  done(null, user.id);
-});
 
-/*
-FIX ME (types) 😭
-*/
-passport.deserializeUser(async (id: string, done: (err: any, user?: any) => void) => {  let user = getUserById(id);
-  const user = await getUserById(id); // Await the promise
-  if (user) {
-    done(null, user);
-  } else {
-    done({ message: "User not found" }, null);
-  }
-});
-
-const passportLocalStrategy: PassportStrategy = {
+export default {
   name: 'local',
-  strategy: localStrategy,
+  strategy: localStrategy
 };
-
-export default passportLocalStrategy;

@@ -1,7 +1,3 @@
-/*
-FIX ME (types) 😭
-*/
-
 import { Request, Response, NextFunction } from "express";
 
 export const ensureAuthenticated = (req: Request, res: Response, next: NextFunction) => {
@@ -17,19 +13,3 @@ export const forwardAuthenticated = (req: Request, res: Response, next: NextFunc
   }
   res.redirect("/dashboard");
 }
-  // export const ensureAuthenticated = (req: any, res: any, next: any) => {
-//   if (req.isAuthenticated()) {
-//     return next();
-//   }
-//   res.redirect("/auth/login");
-// }
-
-/*
-FIX ME (types) 😭
-*/
-// export const forwardAuthenticated = (req: any, res: any, next: any) => {
-//     if (!req.isAuthenticated()) {
-//       return next();
-//     }
-//     res.redirect("/dashboard");
-// }
