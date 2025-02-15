@@ -8,28 +8,27 @@ const localStrategy = new LocalStrategy(
     usernameField: "email",
     passwordField: "password",
   },
-  (email, password, done) => {
-    const user = getUserByEmailIdAndPassword(email, password);
+  async (email: string, password: string, done) => {
+    const user = await getUserByEmailIdAndPassword(email, password);
     return user
-      ? done(null, user)
+      ? done(null, Express.User)
       : done(null, false, {
-          message: "Your login details are not valid. Please try again",
-        });
+        message: "Your login details are not valid. Please try again",
+      });
   }
 );
-
 /*
 FIX ME (types) 😭
 */
-passport.serializeUser(function (user: any, done: any) {
+passport.serializeUser((user: { id: string }, done: (err: any, id?: string) => void) => {
   done(null, user.id);
 });
 
 /*
 FIX ME (types) 😭
 */
-passport.deserializeUser(function (id: any, done: any) {
-  let user = getUserById(id);
+passport.deserializeUser(async (id: string, done: (err: any, user?: any) => void) => {  let user = getUserById(id);
+  const user = await getUserById(id); // Await the promise
   if (user) {
     done(null, user);
   } else {
