@@ -5,6 +5,13 @@
         <img src="/secure-icon.png" alt="icon" width="20%" />
       </h1>
       <h2>Login</h2>
+
+      <% if (messages.length > 0) { %>
+        <div class="alert alert-danger">
+          <%= messages[0] %>
+        </div>
+      <% } %>
+
       <form action="/auth/login" method="POST">
         <div class="form-group">
           <label for="email">Email</label>
@@ -28,17 +35,11 @@
         </div>
         <button type="submit" class="btn btn-primary btn-block">Login</button>
       </form>
-      <a class="btn btn-danger btn-block"href="/auth/github">Login with Github</a>
+      <a class="btn btn-danger btn-block" href="/auth/github">Login with Github</a>
       <p class="mt-4">New User? <a href="/auth/register">Register</a></p>
       <p>Forgot Password? <a href="/auth/forgot">Reset</a></p>
     </div>
   </div>
 </div>
 
-<% if (messages.length > 0) { %>
-  <div class="alert alert-danger">
-    <% messages.forEach(message => { %>
-      <p><%= message %></p>
-    <% }) %>
-  </div>
-<% } %>
+

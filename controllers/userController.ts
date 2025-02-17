@@ -1,19 +1,38 @@
-import { userModel, User } from "../models/userModel";
+import { userModel } from "../models/userModel";
 
-const getUserByEmailIdAndPassword = async (
-  email: string,
-  password: string
-): Promise<User | null> => {
-  const user = await userModel.findOne(email);
-  return user && isUserValid(user, password) ? user : null;
+// Fetch user by email and validate password
+const getUserByEmailIdAndPassword = (email: string, password: string) => {
+  const user = userModel.findOne(email);
+  if (user) {
+    if (isUserValid(user, password)) {
+      return user;
+    }
+  }
+  return null;
 };
 
-const getUserById = async (id: number): Promise<User | null> => {
-  return await userModel.findById(id);
+// Fetch user by ID
+const getUserById = (id: any) => {
+  const user = userModel.findById(id);
+  if (user) {
+    return user;
+  }
+  return null;
 };
 
-function isUserValid(user: User, password: string): boolean {
+// Fetch user by email only (used in localStrategy.ts)
+const getUserByIdOrEmail = (email: string) => {
+  const user = userModel.findOne(email);
+  return user || null; // Return the user if found, otherwise return null
+};
+
+// Helper function to validate the password
+function isUserValid(user: any, password: string) {
   return user.password === password;
 }
 
-export { getUserByEmailIdAndPassword, getUserById, isUserValid };
+export {
+  getUserByEmailIdAndPassword,
+  getUserById,
+  getUserByIdOrEmail, // Export the new function
+};

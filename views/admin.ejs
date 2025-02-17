@@ -1,30 +1,32 @@
-<%- include('layout') -%>
+<h1 class="mt-4">Admin Dashboard</h1>
+<p class="lead mb-3">Active Sessions</p>
 
-<div class="container mt-4">
-  <h1>Admin Dashboard</h1>
-  <table class="table">
-    <thead>
+<table class="table">
+  <thead>
+    <tr>
+      <th>User ID</th>
+      <th>User Name</th>
+      <th>Session Expires</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% sessions.forEach(session => { %>
       <tr>
-        <th>Session ID</th>
-        <th>User ID</th>
-        <th>Actions</th>
+        <td><%= session.userId %></td>
+        <td><%= session.userName %></td>
+        <td><%= session.expires %></td>
+        <td>
+          <form action="/admin/revoke/<%= session.sessionId %>" method="POST">
+            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to revoke this session?')">
+                Revoke
+              </button>              
+          </form>
+        </td>
       </tr>
-    </thead>
-    <tbody>
-      <% sessions.forEach(session => { %>
-        <tr>
-          <td><%= session.id %></td>
-          <td><%= session.passport?.user %></td>
-          <td>
-            <form action="/admin/revoke" method="POST">
-              <input type="hidden" name="sessionId" value="<%= session.id %>">
-              <button type="submit" class="btn btn-danger">Revoke</button>
-            </form>
-          </td>
-        </tr>
-      <% }) %>
-    </tbody>
-  </table>
-</div>
+    <% }); %>
+  </tbody>
+</table>
 
-<%- include('layout-end') -%>
+
+  

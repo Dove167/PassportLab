@@ -1,16 +1,20 @@
-import passport from 'passport';
-import { Express } from 'express';
-import PassportConfig from './passportConfig';
-import localStrategy from './passportStrategies/localStrategy';
+import { Application } from "express";
+import passport from "passport";
+import PassportConfig from "./PassportConfig";
 
-const passportMiddleware = (app: Express) => {
-  // Configure strategies
-  const strategies = [localStrategy];
-  new PassportConfig(strategies);
-  
-  // Initialize passport
+import localStrategy from "./passportStrategies/localStrategy";
+import passportGitHubStrategy from "./passportStrategies/githubStrategy";
+
+// Pass the strategies directly to the PassportConfig constructor
+const passportConfig = new PassportConfig([
+  localStrategy,
+  passportGitHubStrategy,
+]);
+
+const passportMiddleware = (app: Application): void => {
   app.use(passport.initialize());
   app.use(passport.session());
 };
 
-export default passportMiddleware;
+
+export default passportMiddleware; passportConfig;

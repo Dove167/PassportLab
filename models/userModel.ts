@@ -1,14 +1,4 @@
-interface User {
-  id: number;
-  name: string;
-  email?: string;
-  password?: string;
-  role: string;
-  githubId?: string;
-  provider?: string;
-}
-
-const database: User[] = [
+const database: Express.User[] = [
   {
     id: 1,
     name: "Jimmy Smith",
@@ -33,23 +23,36 @@ const database: User[] = [
 ];
 
 const userModel = {
-  // Add this method
-  create: (user: User) => {
-    database.push({ 
-      ...user,
-      id: database.length + 1
-    });
+  /**
+   * Find a user by email.
+   * @param email - The email to search for.
+   * @returns The user if found.
+   */
+  findOne: (email: string): Express.User | undefined => {
+    const user = database.find((user) => user.email === email);
+    return user; // Return undefined if not found
+  },
+
+  /**
+   * Find a user by ID.
+   * @param id - The ID to search for.
+   * @returns The user if found.
+   */
+  findById: (id: number): Express.User | undefined => {
+    const user = database.find((user) => user.id === id);
+    return user; // Return undefined if not found
+  },
+
+  /**
+   * Create a new user and add it to the database.
+   * @param user - The user to create.
+   * @returns The created user.
+   */
+  create: (user: Express.User): Express.User => {
+    console.log("Creating user:", user);
+    database.push(user); // Add the user to the database
     return user;
   },
-  findOne: (email: string): User | null => {
-    const user = database.find(user => user.email === email);
-    return user || null;
-  },
-  findById: (id: number): User | null => {
-    const user = database.find(user => user.id === id);
-    return user || null;
-  }
 };
 
-export { database, userModel, User };
-
+export { database, userModel };

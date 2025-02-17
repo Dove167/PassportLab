@@ -1,42 +1,63 @@
 import express from 'express';
-import { ensureAuthenticated } from '../middleware/checkAuth';
-import { sessionStoreMethods } from '../app';
+import { ensureAdmin } from '../middleware/checkAuth';
+import { userModel } from '../models/userModel';
 
 const router = express.Router();
 
-router.get('/admin', ensureAuthenticated, (req, res) => {
-  if (req.user?.role !== 'admin') {
-    return res.status(403).send('Forbidden');
-  }
+router.get('/', ensureAdmin, (req, res) => {
+  console.log("Session store:", req.sessionStore);
+  const sessionStore = req.sessionStore;
 
-  sessionStoreMethods.getAllSessions((err, sessions) => {
-    if (err) {
-      console.error('Error fetching sessions:', err);
-      return res.status(500).send('Internal Server Error');
+  if (!req.sessionStore || typeof sessionStore.all !== 'function') {
+    return res.status(500).send('Session store is misconfigured or missing required methods.');
+  }
+  
+
+  const sessions: Array<{
+    sessionId: string;
+    userId?: number | string;
+    userName?: string;
+    expires: string;
+  }> = [];
+
+  sessionStore.all((err, allSessions = {}) => {
+    if (err) return res.status(500).send('Error retrieving sessions');
+
+    if (!allSessions) {
+      return res.status(500).send('No active sessions found.');
     }
 
-    const sessionList = (sessions || []).map((session: any) => ({
-      id: session.id,
-      user: session.passport?.user
-    }));
-
-    res.render('admin', {
-      user: req.user,
-      sessions: sessionList
+    Object.entries(allSessions).forEach(([sessionId, sessionData]) => {
+      const userId = sessionData.passport?.user;
+      const user = userId ? userModel.findById(Number(userId)) : undefined;
+      if (user) {
+        sessions.push({
+          sessionId,
+          userId: user.id,
+          userName: user.name,
+          expires: sessionData.cookie.expires
+            ? new Date(sessionData.cookie.expires).toLocaleString()
+            : 'Active Session'
+        });
+      }
     });
+
+    res.render('admin', { sessions });
   });
 });
 
-router.post('/admin/revoke', ensureAuthenticated, (req, res) => {
-  if (req.user?.role !== 'admin') {
-    return res.status(403).send('Forbidden');
+router.post('/revoke/:sessionId', ensureAdmin, (req, res) => {
+  const { sessionId } = req.params;
+  const sessionStore = req.sessionStore;
+
+  if (!sessionStore || typeof sessionStore.destroy !== 'function') {
+    return res.status(500).send('Session store is not configured correctly.');
   }
 
-  const sessionId = req.body.sessionId;
-  sessionStoreMethods.destroySession(sessionId, (err) => {
+  sessionStore.destroy(sessionId, (err) => {
     if (err) {
-      console.error('Error destroying session:', err);
-      return res.status(500).send('Internal Server Error');
+      console.error('Error revoking session:', err);
+      return res.redirect('/admin');
     }
     res.redirect('/admin');
   });
